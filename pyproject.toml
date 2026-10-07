@@ -1,0 +1,36 @@
+[project]
+name = "shotdrift-comfyui"
+version = "0.1.0"
+description = "Measure whether a generated clip holds the camera move it was given, inside the graph that made it."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Syamjith NK", email = "hello@syamjithnk.com" }]
+# Pinned to the release that introduced measure_frames(): this node measures an
+# IMAGE batch that never became a file, and nothing before 0.2.0 can do that.
+dependencies = ["shotdrift>=0.2.0"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Video",
+]
+
+[project.urls]
+Repository = "https://github.com/Syamjith-NK/shotdrift-comfyui"
+Measurement = "https://github.com/Syamjith-NK/shotdrift"
+
+# ComfyUI registry metadata (comfy-cli / Comfy Registry reads this table).
+[tool.comfy]
+PublisherId = "syamjithnk"
+DisplayName = "shotdrift"
+Icon = ""
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# importlib mode, deliberately. A ComfyUI custom node MUST have an __init__.py at
+# the repo root - that file is the entry point ComfyUI loads - and under pytest's
+# default prepend mode that root package makes it resolve the test module's own
+# name as `__init__`, which then fails on its relative import. The product
+# requirement wins and the harness adapts.
+addopts = "--import-mode=importlib"
+consider_namespace_packages = false
