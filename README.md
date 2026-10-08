@@ -9,7 +9,7 @@ then the graph has moved on. These nodes measure the camera path out of the pixe
 — pan, zoom, roll, frame by frame — and can stop the queue when a take did not do
 what it was told.
 
-![two nodes: Shotdrift Measure (frames) and Shotdrift Measure (file)](#)
+![Text report from the synthetic demo: asked for a push-in, measured a pan, marked NOT HELD.](docs/report-push-in-not-held.png)
 
 ```
 Shotdrift Measure (frames)
@@ -41,7 +41,8 @@ with different answers.
 
 ## Install
 
-ComfyUI Manager: search **shotdrift**. By hand:
+Clone it into `ComfyUI/custom_nodes` and install the requirements with the
+Python that runs ComfyUI:
 
 ```console
 cd ComfyUI/custom_nodes
@@ -49,11 +50,17 @@ git clone https://github.com/Syamjith-NK/shotdrift-comfyui
 ../../python_embeded/python -m pip install -r shotdrift-comfyui/requirements.txt
 ```
 
-Install into the **same interpreter ComfyUI runs on** — that is the one mistake
-worth calling out, and the node says so by name if it loads without its
-measurement library. It pulls in `numpy` and `pillow` only: no torch beyond the
-one ComfyUI already has, no OpenCV, no model weights, no network. The *file* node
-additionally needs `ffmpeg` on PATH.
+`python_embeded/python` is the portable Windows build. On a venv or any other
+install, run that same `pip install -r` with the interpreter that launches
+ComfyUI — not another Python on `PATH`. That is the one mistake worth calling
+out, and the node says so by name if it loads without its measurement library.
+
+It is not in the ComfyUI Registry or ComfyUI Manager yet. That install is coming;
+searching Manager for **shotdrift** will not find this node.
+
+It pulls in `numpy` and `pillow` only: no torch beyond the one ComfyUI already
+has, no OpenCV, no model weights, no network. The *file* node additionally
+needs `ffmpeg` on PATH.
 
 ## The two nodes
 
