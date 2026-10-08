@@ -1,3 +1,2 @@
-# The measurement. 0.2.0 is the floor on purpose: measure_frames() - measuring an
-# IMAGE batch that never became a file - does not exist before it.
-shotdrift>=0.2.0
+# Requires coverage-aware results, unknown expectations and strict JSON.
+shotdrift>=0.2.2

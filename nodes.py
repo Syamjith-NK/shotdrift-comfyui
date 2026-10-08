@@ -21,16 +21,21 @@ reimplements the measurement is a second opinion that will drift from the first.
 from __future__ import annotations
 
 from shotdrift import __version__ as SHOTDRIFT_VERSION
-from shotdrift import measure, measure_frames, report
+from shotdrift import Result, measure, measure_frames, report
 from shotdrift.expect import known as known_moves
 from shotdrift.verdict import BROKEN, SOFT, at_or_above
 
 NONE = "(none)"
 
-# What a graph is allowed to stop for. Stopping is the point of gating a batch -
-# an unattended run of 60 takes is only worth doing if the bad ones announce
-# themselves - but the default stops for nothing, because a node that halts a
-# queue the first time it is wired in gets deleted.
+if not hasattr(Result, "complete"):
+    raise ImportError(
+        "shotdrift-comfyui requires shotdrift >= 0.2.2. Install the fixed core "
+        "into the SAME interpreter ComfyUI runs on: python -m pip install -U "
+        "'shotdrift>=0.2.2' (or install its local source before release)."
+    )
+
+# Active gates reject incomplete measurements as well as the selected condition.
+# The default only reports, so adding a node does not abort a running prompt.
 FAIL_MODES = [
     "nothing",
     "the declared move was not held",
@@ -41,6 +46,10 @@ FAIL_MODES = [
 
 def _should_fail(r, mode: str) -> str | None:
     """The reason to stop, or None. One place, so both nodes agree."""
+    if mode not in FAIL_MODES:
+        raise ValueError(f"unknown fail_on mode: {mode!r}")
+    if mode != FAIL_MODES[0] and not r.complete:
+        return "measurement incomplete or unmeasurable; cannot accept this clip"
     if mode == FAIL_MODES[1]:
         bad = [s for s in r.shots if s.expect is not None and not s.expect.ok]
         if bad:
@@ -66,11 +75,11 @@ def _finish(r, fail_on: str):
     print(text)                       # the ComfyUI console is where people look
     reason = _should_fail(r, fail_on)
     if reason:
-        # Raising is what stops the queue. The report goes with it, or the person
-        # reading the error has to go and find out what happened separately.
+        # Raising stops this prompt, not other prompts already in the queue.
+        # Include the report so the reason is visible beside the failed node.
         raise RuntimeError(f"shotdrift stopped this run - {reason}\n{text}")
     import json
-    return text, bool(r.ok), json.dumps(r.as_dict(), indent=2)
+    return text, bool(r.ok), json.dumps(r.as_dict(), indent=2, allow_nan=False)
 
 
 _COMMON = {
@@ -79,13 +88,13 @@ _COMMON = {
                    "did it happen, was it the right way round, was it held.",
     }),
     "fail_on": (FAIL_MODES, {
-        "tooltip": "Stop the queue when this is true. Use it to gate an "
-                   "unattended batch; leave it at 'nothing' to only report.",
+        "tooltip": "Fail this prompt when this is true, or measurement is incomplete. "
+                   "Other queued prompts continue. 'nothing' only reports.",
     }),
     "max_side": ("INT", {"default": 512, "min": 128, "max": 2048, "step": 64,
                          "tooltip": "Analysis resolution, long edge. Everything "
                                     "is reported in fractions of the frame "
-                                    "width, so this does not move the numbers."}),
+                                    "width; precision can change with resolution."}),
     "grid": ("INT", {"default": 4, "min": 2, "max": 8,
                      "tooltip": "Tiles per axis that get tracked and fitted."}),
     "segment": ("BOOLEAN", {"default": True,
@@ -152,17 +161,30 @@ class ShotdriftMeasureFile:
                 "max_frames": ("INT", {"default": 600, "min": 2, "max": 100000,
                                        "tooltip": "Frame budget. The report says "
                                                   "when a clip was truncated."}),
+                "after": ("STRING", {"forceInput": True,
+                                      "tooltip": "Connect a STRING output from the save "
+                                                 "node to make this check run after saving."}),
             },
         }
 
     RETURN_TYPES = ("STRING", "BOOLEAN", "STRING")
     RETURN_NAMES = ("report", "held", "json")
     FUNCTION = "run"
+    OUTPUT_NODE = True
     CATEGORY = "shotdrift"
     DESCRIPTION = ("Measure the camera move in a video file. Use after a save "
                    "node to measure what was actually written, codec included.")
 
-    def run(self, path, expect, fail_on, max_side, grid, segment, max_frames=600):
+    @classmethod
+    def IS_CHANGED(cls, path, expect, fail_on, max_side, grid, segment,
+                   max_frames=600, after=None):
+        # ComfyUI checks fingerprints before executing upstream saves. Even a
+        # digest can describe the previous file at that point, so always rerun.
+        # NaN is ComfyUI's documented non-cacheable fingerprint, not report JSON.
+        return float("nan")
+
+    def run(self, path, expect, fail_on, max_side, grid, segment, max_frames=600,
+            after=None):
         if not str(path).strip():
             raise ValueError("shotdrift: give a path to a video file.")
         r = measure(

@@ -225,3 +225,40 @@ def test_a_held_move_does_not_trip_any_gate():
 def test_file_node_refuses_an_empty_path():
     with pytest.raises(ValueError, match="path to a video file"):
         NODES["ShotdriftMeasureFile"]().run("  ", "(none)", "nothing", 512, 4, True)
+
+
+@pytest.mark.parametrize("mode", PKG.nodes.FAIL_MODES[1:])
+def test_unmeasurable_batch_blocks_every_active_gate(mode):
+    with pytest.raises(RuntimeError, match="incomplete or unmeasurable"):
+        NODES["ShotdriftMeasure"]().run(
+            torch.zeros((20, 128, 128, 3)), "static", mode, 512, 4, True)
+
+
+def test_report_only_unknown_is_false_and_strict_json():
+    import json
+    _, text, held, js = NODES["ShotdriftMeasure"]().run(
+        torch.zeros((20, 128, 128, 3)), "static", "nothing", 512, 4, True)
+    def invalid_constant(value):
+        raise ValueError(f"invalid JSON constant {value}")
+    data = json.loads(js, parse_constant=invalid_constant)
+    assert not held and data["verdict"] == "unknown"
+    assert "NOT MEASURABLE" in text and "HELD" not in text
+
+
+def test_file_node_is_a_terminal_output_and_never_reuses_external_files(tmp_path):
+    cls = NODES["ShotdriftMeasureFile"]
+    assert cls.OUTPUT_NODE
+    path = tmp_path / "take.mp4"
+    path.write_bytes(b"first")
+    a = cls.IS_CHANGED(str(path), "static", "nothing", 512, 4, True)
+    path.write_bytes(b"other")
+    b = cls.IS_CHANGED(str(path), "static", "nothing", 512, 4, True)
+    assert a != b
+    # Also bypass cache before an upstream saver changes the existing file.
+    assert cls.IS_CHANGED(str(path), "static", "nothing", 512, 4, True) != b
+
+
+def test_incomplete_result_blocks_without_an_expectation():
+    from shotdrift import Result
+    for mode in PKG.nodes.FAIL_MODES[1:]:
+        assert PKG.nodes._should_fail(Result(clip="empty"), mode)
