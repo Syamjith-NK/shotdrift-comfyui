@@ -4,26 +4,31 @@ version = "0.1.0"
 description = "Measure whether a generated clip holds the camera move it was given, inside the graph that made it."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [{ name = "Syamjith NK", email = "hello@syamjithnk.com" }]
 # Pinned to the release that introduced measure_frames(): this node measures an
 # IMAGE batch that never became a file, and nothing before 0.2.0 can do that.
 dependencies = ["shotdrift>=0.2.0"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Topic :: Multimedia :: Video",
 ]
 
 [project.urls]
 Repository = "https://github.com/Syamjith-NK/shotdrift-comfyui"
+"Bug Tracker" = "https://github.com/Syamjith-NK/shotdrift-comfyui/issues"
 Measurement = "https://github.com/Syamjith-NK/shotdrift"
 
 # ComfyUI registry metadata (comfy-cli / Comfy Registry reads this table).
+# https://docs.comfy.org/registry/specifications
 [tool.comfy]
 PublisherId = "syamjithnk"
 DisplayName = "shotdrift"
-Icon = ""
+# 256×256 PNG in this repo, under the registry's 400×400 square limit.
+# The URL is the file on main: that is what the registry fetches after publish.
+Icon = "https://raw.githubusercontent.com/Syamjith-NK/shotdrift-comfyui/main/assets/icon.png"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
