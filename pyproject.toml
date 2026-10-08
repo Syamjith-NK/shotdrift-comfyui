@@ -1,14 +1,13 @@
 [project]
 name = "shotdrift-comfyui"
-version = "0.1.0"
+version = "0.1.1"
 description = "Measure whether a generated clip holds the camera move it was given, inside the graph that made it."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [{ name = "Syamjith NK", email = "hello@syamjithnk.com" }]
-# Pinned to the release that introduced measure_frames(): this node measures an
-# IMAGE batch that never became a file, and nothing before 0.2.0 can do that.
-dependencies = ["shotdrift>=0.2.0"]
+# Requires coverage-aware results and strict JSON from the audit fixes.
+dependencies = ["shotdrift>=0.2.2"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",

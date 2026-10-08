@@ -1,0 +1,14 @@
+{
+  "1": {
+    "class_type": "ShotdriftMeasureFile",
+    "inputs": {
+      "path": "/absolute/path/to/take.mp4",
+      "expect": "push-in",
+      "fail_on": "the declared move was not held",
+      "max_side": 512,
+      "grid": 4,
+      "segment": true,
+      "max_frames": 600
+    }
+  }
+}

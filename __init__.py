@@ -21,8 +21,8 @@ to go and look.
 _MISSING_SHOTDRIFT = (
     "shotdrift-comfyui needs the `shotdrift` package, which is not installed in "
     "ComfyUI's python. Install it into the SAME interpreter ComfyUI runs on:\n"
-    "    path/to/comfy/python -m pip install shotdrift\n"
-    "It pulls in numpy and pillow only, and needs ffmpeg on PATH for the file node."
+    "    path/to/comfy/python -m pip install 'shotdrift>=0.2.2'\n"
+    "It pulls in numpy and pillow only; the file node needs ffmpeg and ffprobe on PATH."
 )
 
 
